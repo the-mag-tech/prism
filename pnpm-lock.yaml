@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@erergb/doc-governance':
-        specifier: git+https://github.com/ERerGB/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd
-        version: git+https://github.com/ERerGB/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd
+        specifier: git+https://github.com/the-mag-tech/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd
+        version: git+https://github.com/the-mag-tech/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd
       node:
         specifier: '>=22'
         version: 25.8.1
@@ -126,8 +126,8 @@ importers:
 
 packages:
 
-  '@erergb/doc-governance@git+https://github.com/ERerGB/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd':
-    resolution: {commit: f99536933a99d905ee43bab4cf76001ca2252ecd, repo: https://github.com/ERerGB/dev-doc-governance.git, type: git}
+  '@erergb/doc-governance@git+https://github.com/the-mag-tech/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd':
+    resolution: {commit: f99536933a99d905ee43bab4cf76001ca2252ecd, repo: https://github.com/the-mag-tech/dev-doc-governance.git, type: git}
     version: 0.1.0
     engines: {node: '>=20'}
     hasBin: true
@@ -1832,7 +1832,7 @@ packages:
 
 snapshots:
 
-  '@erergb/doc-governance@git+https://github.com/ERerGB/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd': {}
+  '@erergb/doc-governance@git+https://github.com/the-mag-tech/dev-doc-governance.git#f99536933a99d905ee43bab4cf76001ca2252ecd': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
