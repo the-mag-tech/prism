@@ -1,0 +1,545 @@
+# =============================================================================
+# REFERENCE REGISTRY - Code ↔ Documentation Bidirectional Links
+# =============================================================================
+#
+# This file serves as the "law book" for code-doc synchronization.
+# When modifying code or docs, check here first to see what else needs updating.
+#
+# Format:
+#   <module>/<concept>[-version]:
+#     description: Brief description
+#     code: [file paths with optional #anchor]
+#     docs: [doc paths with optional #section]
+#     types: [type definition files]
+#     version: semantic version number
+#     updated: ISO date
+#     status: active | deprecated | planned
+#
+# =============================================================================
+
+refs:
+  # ---------------------------------------------------------------------------
+  # SCOUT MODULE
+  # ---------------------------------------------------------------------------
+  
+  scout/profile-v2:
+    description: "Profile generation with real keyLinks and search transparency"
+    code:
+      - src/lib/scout/agent.ts#profile
+      - src/lib/scout/agent.ts#synthesizeProfile
+    docs:
+      - docs/SCOUT-ANYTHING.md#7-mcp-tools
+      - docs/SCOUT-ANYTHING.md#72-prism_scout
+    types:
+      - src/lib/graph-link/types.ts#EntityProfile
+      - src/lib/graph-link/types.ts#RawSearchSource
+      - src/lib/graph-link/types.ts#SearchMetadata
+    version: 2
+    updated: 2025-12-21
+    status: active
+    changelog:
+      - "v2: keyLinks from real search, added searchMetadata/rawSources"
+      - "v1: LLM-generated keyLinks"
+
+  scout/search-tool:
+    description: "Raw search MCP tool - returns unprocessed Tavily results"
+    code:
+      - src/mcp/tools/search.ts
+    docs:
+      - docs/SCOUT-ANYTHING.md#73-prism_search
+    version: 1
+    updated: 2025-12-21
+    status: active
+
+  scout/lod-strategy:
+    description: "Level of Detail scheduling based on Gravity"
+    code:
+      - src/systems/ScoutSystem.ts#tick
+    docs:
+      - docs/SCOUT-ANYTHING.md#2-the-lod-strategy
+    version: 1
+    updated: 2025-12
+    status: active
+
+  scout/fingerprint:
+    description: "Entity fingerprinting for search query enrichment"
+    code:
+      - src/lib/graph-link/reader.ts#getFingerprint
+      - src/lib/graph-link/reader.ts#enrichContext
+    docs:
+      - docs/SCOUT-ANYTHING.md#61-reading-graphreader
+    types:
+      - src/lib/graph-link/types.ts#EntityFingerprint
+    version: 1
+    updated: 2025-12
+    status: active
+
+  scout/patrol:
+    description: "Background patrol mission for entity updates"
+    code:
+      - src/lib/scout/agent.ts#patrol
+      - src/lib/scout/query-generator.ts
+    docs:
+      - docs/SCOUT-ANYTHING.md#63-the-scout-graph-feedback-loop
+    version: 1
+    updated: 2025-12
+    status: active
+
+  # ---------------------------------------------------------------------------
+  # MCP TOOLS
+  # ---------------------------------------------------------------------------
+
+  mcp/tools-registry:
+    description: "Central registration of all MCP tools"
+    code:
+      - src/mcp/tools/index.ts
+    docs:
+      - docs/SCOUT-ANYTHING.md#7-mcp-tools
+    version: 1
+    updated: 2025-12-21
+    status: active
+    tools:
+      - prism_get_context
+      - prism_scout
+      - prism_scout_tick
+      - prism_recall
+      - prism_gravity_top
+      - prism_ingest
+      - prism_explore
+      - prism_search  # Added 2025-12-21
+
+  mcp/http-test-endpoint:
+    description: "HTTP endpoint for testing MCP tools in dev mode"
+    code:
+      - src/app.ts#/mcp/tools/call
+    docs:
+      - docs/SCOUT-ANYTHING.md#9-testing-mcp-tools
+    version: 1
+    updated: 2025-12-21
+    status: active
+
+  mcp/http-jsonrpc:
+    description: "HTTP JSON-RPC 2.0 endpoint for MCP clients (Cursor)"
+    code:
+      - src/app.ts#/mcp
+    docs:
+      - docs/PRISM-MCP-SPEC.md#51-cursor
+      - docs/SCOUT-ANYTHING.md#9-testing-mcp-tools
+    version: 1
+    updated: 2025-12-21
+    status: active
+
+  mcp/stdio-server:
+    description: "Stdio MCP server for Claude Desktop"
+    code:
+      - src/mcp/index.ts
+    docs:
+      - docs/PRISM-MCP-SPEC.md#52-claude-desktop
+    version: 1
+    updated: 2025-12-21
+    status: active
+    binary: prism-mcp-bin
+    config_path: "~/.magpie/prism-mcp"
+
+  # ---------------------------------------------------------------------------
+  # INFRASTRUCTURE
+  # ---------------------------------------------------------------------------
+
+  infra/logger:
+    description: "Environment-aware logger for MCP stdio compatibility"
+    code:
+      - src/lib/logger.ts#log
+      - src/lib/logger.ts#logError
+      - src/lib/logger.ts#logWarn
+      - src/lib/logger.ts#enableMcpMode
+      - src/lib/logger.ts#createLogger
+    docs:
+      - docs/CODE-DOC-SYNC.md#logger-module
+    version: 1
+    updated: 2025-12-21
+    status: active
+    notes: |
+      Solves MCP stdio pollution problem:
+      - MCP mode: all logs → stderr (safe for JSON-RPC)
+      - HTTP mode: log() → stdout, logError() → stderr
+      Consumers: ai-clients.ts, scout/agent.ts, mcp/tools/*.ts
+
+  infra/agent-logger:
+    description: "Structured agent logging with DB persistence"
+    code:
+      - src/lib/agent-logger.ts#AgentLogger
+      - src/lib/agent-logger.ts#AgentLogHandle
+    docs:
+      - docs/WORKER-CHECKLIST.md#1-日志与错误处理
+      - docs/CODE-DOC-SYNC.md#11-graceful-shutdown
+    types:
+      - src/lib/agent-logger.ts#AgentType
+      - src/lib/agent-logger.ts#AgentLogEntry
+    version: 2
+    updated: 2025-12-24
+    status: active
+    changelog:
+      - "v2: Added log() method to prevent 'not a function' errors"
+      - "v1: Initial start()/success()/error() pattern"
+    consumers:
+      - src/lib/graph-link/writer.ts
+      - src/lib/scout/agent.ts
+      - src/lib/gardener/service.ts
+      - src/mcp/tools/ingest.ts
+
+  infra/memo-id:
+    description: "Unified memory ID field (SSOT for memory-entity links)"
+    code:
+      - src/lib/graph-link/writer.ts#ingestFinding
+      - src/lib/graph-link/writer.ts#addEntityFromSource
+      - src/extract.ts#extractEntities
+    docs:
+      - docs/WORKER-CHECKLIST.md#2-数据库字段一致性
+      - AGENTS.md#field-naming-ssot
+    migrations:
+      - src/migrations/v39_unify_memo_id.ts
+    version: 1
+    updated: 2025-12-24
+    status: active
+    notes: |
+      Replaces deprecated fields:
+      - source_memo_id (used by ingestFinding)
+      - source_memory_id (used by extractEntities)
+      Now unified as memo_id for all entity-memory links.
+
+  # ---------------------------------------------------------------------------
+  # WORKER DEVELOPMENT
+  # ---------------------------------------------------------------------------
+
+  worker/checklist:
+    description: "Development checklist for new workers/agents"
+    docs:
+      - docs/WORKER-CHECKLIST.md
+      - AGENTS.md#workflow-adding-new-workeragent
+    version: 1
+    updated: 2025-12-24
+    status: active
+    covers:
+      - Logging patterns (AgentLogger)
+      - Error persistence
+      - Field naming conventions
+      - Pipeline completeness (ingest → extract)
+      - CLI parameter parsing
+      - Environment configuration
+
+  # ---------------------------------------------------------------------------
+  # AI CLIENTS
+  # ---------------------------------------------------------------------------
+
+  ai-clients/runtime-keys:
+    description: "Runtime key injection from frontend"
+    code:
+      - src/lib/ai-clients.ts#configureKeys
+    docs:
+      - docs/AI-CLIENTS.md#priority-1-runtime-keys
+    version: 1
+    updated: 2025-12
+    status: active
+
+  ai-clients/shared-config:
+    description: "Shared config file for MCP binary key access"
+    code:
+      - src/lib/ai-clients.ts#loadSharedConfig
+      - src/lib/ai-clients.ts#saveSharedConfig
+      - src/lib/ai-clients.ts#getSharedConfigPath
+    docs:
+      - docs/AI-CLIENTS.md#shared-config-file-api
+      - docs/PRISM-MCP-SPEC.md#53-key-configuration-architecture
+    types:
+      - src/lib/ai-clients.ts#SharedConfig
+    version: 1
+    updated: 2025-12-21
+    status: active
+    config_path: "~/.magpie/prism-config.json"
+
+  ai-clients/proxy-mode:
+    description: "Proxy mode for users without own API keys"
+    code:
+      - src/lib/ai-clients.ts#isProxyMode
+      - src/lib/ai-clients.ts#getProxyConfig
+      - src/lib/ai-clients.ts#createProxyTavilyClient
+    docs:
+      - docs/AI-CLIENTS.md#priority-4-proxy-mode
+    version: 1
+    updated: 2025-12
+    status: active
+    env_vars:
+      - MAGPIE_PROXY_TOKEN
+      - MAGPIE_PROXY_URL
+
+  # ---------------------------------------------------------------------------
+  # GRAPH LINK
+  # ---------------------------------------------------------------------------
+
+  graph-link/entity-profile:
+    description: "Entity profile data structure"
+    code:
+      - src/lib/graph-link/types.ts#EntityProfile
+    docs:
+      - docs/SCOUT-ANYTHING.md#72-prism_scout
+    version: 2
+    updated: 2025-12-21
+    status: active
+    fields:
+      - name, bio, role, tags, assets
+      - keyLinks (v2: with source tracking)
+      - relatedEntities
+      - rawSources (v2: new)
+      - searchMetadata (v2: new)
+
+  # ---------------------------------------------------------------------------
+  # MAGPIE AUTH (Cross-project reference to apps/magpie)
+  # ---------------------------------------------------------------------------
+
+  auth/token-validation:
+    description: "Proxy token validation on app startup"
+    code:
+      - ../magpie/src/lib/data-layer.ts#validateProxyToken
+      - ../magpie/src/pages/_app.tsx  # startup validation
+    docs:
+      - ../magpie/AGENTS.md#authentication--token-management
+    version: 1
+    updated: 2025-12-21
+    status: active
+    flow: |
+      1. Check localStorage for magpie_proxy_token
+      2. Validate with proxy server (/proxy/tavily/search)
+      3. If invalid → Show "Session Expired" screen
+      4. User can continue or re-login
+
+  auth/logout:
+    description: "Logout functionality - clears proxy token"
+    code:
+      - ../magpie/src/lib/data-layer.ts#logout
+      - ../magpie/src/components/overlays/SettingsPanel.tsx#AccountSection
+    docs:
+      - ../magpie/AGENTS.md#authentication--token-management
+    version: 1
+    updated: 2025-12-21
+    status: active
+    clears:
+      - magpie_proxy_token (localStorage)
+
+  auth/user-info:
+    description: "Get logged-in user info from JWT"
+    code:
+      - ../magpie/src/lib/data-layer.ts#getLoggedInUser
+      - ../magpie/src/lib/data-layer.ts#isLoggedIn
+    version: 1
+    updated: 2025-12-21
+    status: active
+
+  # ---------------------------------------------------------------------------
+  # QUEUE SYSTEM (2026-01-08)
+  # ---------------------------------------------------------------------------
+
+  queue/bun-queue:
+    description: "SQLite-backed durable task queue for crash recovery"
+    code:
+      - src/lib/queue/bun-queue.ts#BunSqliteQueue
+      - src/lib/queue/bun-queue.ts#BunRunner
+      - src/lib/queue/bun-queue.ts#initQueueDB
+    docs:
+      - docs/WORKER-CHECKLIST.md#6-队列系统集成
+      - docs/CODE-DOC-SYNC.md#15-agent-workers--queue-system
+    types:
+      - src/lib/queue/types.ts#ExtractionTask
+      - src/lib/queue/types.ts#ScoutTask
+      - src/lib/queue/types.ts#RippleTask
+      - src/lib/queue/types.ts#CuratorTask
+    version: 1
+    updated: 2026-01-08
+    status: active
+    notes: |
+      Key features:
+      - SQLite persistence (survives crashes)
+      - Automatic retry with exponential backoff
+      - Stale job recovery on startup
+      - Per-queue concurrency limits
+
+  queue/client:
+    description: "Type-safe enqueue APIs for all task types"
+    code:
+      - src/lib/queue/client.ts#enqueueExtraction
+      - src/lib/queue/client.ts#enqueueScout
+      - src/lib/queue/client.ts#enqueueRipple
+      - src/lib/queue/client.ts#enqueueCurator
+    docs:
+      - docs/WORKER-CHECKLIST.md#6-队列系统集成
+    version: 1
+    updated: 2026-01-08
+    status: active
+
+  # ---------------------------------------------------------------------------
+  # AGENT WORKERS (2026-01-08)
+  # ---------------------------------------------------------------------------
+
+  agents/ripple-worker:
+    description: "Ripple event worker with AgentLogger persistence"
+    code:
+      - src/lib/agents/ripple/worker.ts#handleRippleTask
+    docs:
+      - docs/RIPPLE-EFFECT-SPEC.md
+      - docs/CODE-DOC-SYNC.md#16-ripple-system
+    version: 1
+    updated: 2026-01-08
+    status: active
+    agent_logger: scout/ripple
+
+  agents/scout-worker:
+    description: "Scout patrol worker with AgentLogger persistence"
+    code:
+      - src/lib/agents/scout/worker.ts#handleScoutTask
+    docs:
+      - docs/SCOUT-ANYTHING.md
+      - docs/CODE-DOC-SYNC.md#15-agent-workers--queue-system
+    version: 1
+    updated: 2026-01-08
+    status: active
+    agent_logger: scout/patrol
+
+  agents/explorer-worker:
+    description: "Deep explorer worker with AgentLogger persistence"
+    code:
+      - src/lib/agents/explorer/worker.ts#handleExploreTask
+    docs:
+      - docs/DEEP-EXPLORER-STRATEGIES.md
+      - docs/CODE-DOC-SYNC.md#15-agent-workers--queue-system
+    version: 1
+    updated: 2026-01-08
+    status: active
+    agent_logger: deep_explorer/explore
+
+  agents/curator-worker:
+    description: "Curator (ex-Gardener) worker with AgentLogger persistence"
+    code:
+      - src/lib/agents/curator/worker.ts#handleCuratorTask
+    docs:
+      - docs/GARDENER-PROTOCOL.md
+      - docs/CODE-DOC-SYNC.md#15-agent-workers--queue-system
+    version: 1
+    updated: 2026-01-08
+    status: active
+    agent_logger: curator/cycle
+
+  # ---------------------------------------------------------------------------
+  # RIPPLE SYSTEM (2026-01-08)
+  # ---------------------------------------------------------------------------
+
+  ripple/system:
+    description: "Event-driven knowledge propagation orchestrator"
+    code:
+      - src/systems/RippleSystem.ts#emit
+      - src/systems/RippleSystem.ts#handleEventDirect
+      - src/systems/RippleSystem.ts#tick
+    docs:
+      - docs/RIPPLE-EFFECT-SPEC.md
+      - docs/CODE-DOC-SYNC.md#16-ripple-system
+      - docs/MODULE-BOUNDARIES.md#23-ripple
+    version: 1
+    updated: 2026-01-08
+    status: active
+
+  ripple/agent:
+    description: "Core ripple logic - propagate/profile/onboard"
+    code:
+      - src/lib/ripple/agent.ts#propagate
+      - src/lib/ripple/agent.ts#profile
+      - src/lib/ripple/agent.ts#onboard
+      - src/lib/ripple/agent.ts#evaluateCandidates
+    docs:
+      - docs/RIPPLE-EFFECT-SPEC.md#4-architecture--implementation
+      - docs/CODE-DOC-SYNC.md#16-ripple-system
+    types:
+      - src/lib/ripple/types.ts#RippleConfig
+      - src/lib/ripple/types.ts#RippleResult
+      - src/lib/ripple/types.ts#EntityProfile
+    version: 1
+    updated: 2026-01-08
+    status: active
+
+  ripple/serendipity:
+    description: "Surprise score filtering for content onboarding"
+    code:
+      - src/lib/ripple/agent.ts#evaluateCandidates
+      - src/lib/graph-link/reader.ts#calculateSurprise
+    docs:
+      - docs/SERENDIPITY-EXPERIMENT.md
+      - docs/CODE-DOC-SYNC.md#16-ripple-system
+    version: 1
+    updated: 2026-01-08
+    status: active
+
+  # ---------------------------------------------------------------------------
+  # ENTITY DEFINITIONS CONTRACT (2026-01-08)
+  # ---------------------------------------------------------------------------
+
+  contract/entity-definitions:
+    description: "SSOT for entity type definitions, tribes, and profile strategies"
+    code:
+      - ../../../packages/prism-contract/src/entity-definitions.ts#ENTITY_DEFINITIONS
+      - ../../../packages/prism-contract/src/entity-definitions.ts#EXTRACTABLE_TYPES
+      - ../../../packages/prism-contract/src/entity-definitions.ts#PROFILEABLE_TYPES
+      - ../../../packages/prism-contract/src/entity-definitions.ts#TRIBE_PROFILE_STRATEGIES
+    docs:
+      - docs/CODE-DOC-SYNC.md#17-entity-definitions-ssot
+      - docs/MODULE-BOUNDARIES.md#11-模块职责总表
+    version: 1
+    updated: 2026-01-08
+    status: active
+    consumers:
+      - src/pipeline-version.ts
+      - src/lib/graph-link/atoms/entity-extraction.ts
+      - src/lib/ripple/agent.ts
+      - src/lib/ripple/types.ts
+      - ../magpie/src/lib/entity-semantics-api.ts
+
+  contract/four-tribes:
+    description: "Four Tribes classification philosophy"
+    code:
+      - ../../../packages/prism-contract/src/entity-definitions.ts#TRIBE_META
+      - ../../../packages/prism-contract/src/entity-definitions.ts#getTribeFromType
+    docs:
+      - ../../landing/content/blog/the-four-tribes.md
+      - docs/CODE-DOC-SYNC.md#17-entity-definitions-ssot
+    version: 1
+    updated: 2026-01-08
+    status: active
+    tribes:
+      - source: "Raw input soil (memory, finding)"
+      - archivist: "Links are knowledge (topic, concept, problem, insight)"
+      - salesman: "People matter (person, company, project)"
+      - gardener: "Relationships need context (gift, hobby, location)"
+      - logger: "Capture the timeline (event, milestone, decision, news)"
+
+# =============================================================================
+# SYNC STATUS
+# =============================================================================
+#
+# Last full sync check: 2026-01-08
+# 
+# Recent updates:
+#   - [x] Add queue/* refs (2026-01-08) - durable SQLite queue
+#   - [x] Add agents/* refs (2026-01-08) - unified worker structure
+#   - [x] Add ripple/* refs (2026-01-08) - event-driven propagation
+#   - [x] Add contract/entity-definitions refs (2026-01-08) - SSOT
+#   - [x] Add contract/four-tribes refs (2026-01-08) - classification
+#   - [x] Add infra/agent-logger refs (2025-12-24) - v2 with log() method
+#   - [x] Add infra/memo-id refs (2025-12-24) - unified field SSOT
+#   - [x] Add worker/checklist refs (2025-12-24) - new worker dev guide
+#   - [x] Add infra/logger refs (2025-12-21)
+#   - [x] Add auth/* refs for Magpie token management (2025-12-21)
+#
+# Pending updates:
+#   - [ ] Add @ref tags to code files (inline)
+#   - [ ] Create sync check script
+#   - [ ] Add extraction retry mechanism
+#
+# =============================================================================
+
+

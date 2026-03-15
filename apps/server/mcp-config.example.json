@@ -1,0 +1,8 @@
+{
+    "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",
+    "mcpServers": {
+        "prism": {
+            "command": "/path/to/prism-mcp-bin"
+        }
+    }
+}
